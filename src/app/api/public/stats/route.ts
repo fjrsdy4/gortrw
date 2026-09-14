@@ -4,11 +4,14 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { citizens, announcements, events, transactions, assets, umkmProducts } from "@/db/schema";
 import { eq, sql, desc, and } from "drizzle-orm";
+import { ensureDatabase } from "@/db/bootstrap";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    // Auto-bootstrap agar landing page langsung tampil di Vercel tanpa setup manual.
+    await ensureDatabase();
     const [citizenCount] = await db.select({ count: sql<number>`count(*)::int` }).from(citizens).where(eq(citizens.status, "aktif"));
     const [familyCount] = await db.select({ count: sql<number>`count(distinct ${citizens.familyId})` })
       .from(citizens).where(and(eq(citizens.status, "aktif"), sql`${citizens.familyId} is not null`));
