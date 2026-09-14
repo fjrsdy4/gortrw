@@ -1,7 +1,8 @@
 // Auto-bootstrap database: membuat seluruh tabel & enum (idempotent) lalu mengisi
 // data demo bila kosong. Dipanggil otomatis oleh endpoint login/seed/stats agar
 // aplikasi langsung jalan di Vercel tanpa menjalankan drizzle-kit push manual.
-import { db, getPool } from "@/db";
+import { db } from "@/db";
+import { sql } from "drizzle-orm";
 import { users, announcements, events, assets, dueTypes, citizens, families, transactions, umkmProducts } from "@/db/schema";
 import bcrypt from "bcryptjs";
 
@@ -99,7 +100,8 @@ let ensuredThisInstance = false;
 /** Membuat tabel bila belum ada, lalu seed data demo bila kosong. Aman dipanggil berkali-kali. */
 export async function ensureDatabase(): Promise<void> {
   if (ensuredThisInstance) return;
-  await getPool().query(BOOTSTRAP_SQL);
+  // Menjalankan SQL bootstrap lewat Drizzle (tanpa bergantung pada export pool tertentu).
+  await db.execute(sql.raw(BOOTSTRAP_SQL));
   await seedIfEmpty();
   ensuredThisInstance = true;
 }
