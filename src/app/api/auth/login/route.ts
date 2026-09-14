@@ -4,11 +4,15 @@ import { db } from "@/db";
 import { users, activityLogs } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { ensureDatabase } from "@/db/bootstrap";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
+    // Pastikan tabel + akun demo tersedia sebelum query (auto-bootstrap di Vercel).
+    await ensureDatabase();
+
     const { username, password } = await req.json();
     const [user] = await db.select().from(users).where(eq(users.username, username)).limit(1);
     if (!user) return NextResponse.json({ error: "Username atau password salah" }, { status: 401 });
@@ -25,3 +29,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Error" }, { status: 500 });
   }
 }
+
